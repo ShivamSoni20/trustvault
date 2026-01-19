@@ -15,7 +15,7 @@ export function useWallet() {
 
   useEffect(() => {
     if (!mounted) return;
-    
+
     const checkConnection = async () => {
       if (isConnected()) {
         const userData = getLocalStorage();
@@ -49,8 +49,9 @@ export function useWallet() {
       }
 
       const response = await connect();
-      if (response && response.addresses?.stx?.[0]?.address) {
-        const addr = response.addresses.stx[0].address;
+      const authResponse = response as any;
+      if (authResponse && authResponse.addresses?.stx?.[0]?.address) {
+        const addr = authResponse.addresses.stx[0].address;
         setAddress(addr);
         setConnected(true);
         const bal = await getUserBalance(addr);
