@@ -68,6 +68,18 @@ export default function EscrowDetailPage() {
   const isFreelancer = address === escrow?.freelancer;
   const isArbitrator = address === CONTRACT_ADDRESS;
 
+  // Debug logging
+  console.log('=== Escrow Detail Debug ===');
+  console.log('Your address:', address);
+  console.log('Client address:', escrow?.client);
+  console.log('Freelancer address:', escrow?.freelancer);
+  console.log('isClient:', isClient);
+  console.log('isFreelancer:', isFreelancer);
+  console.log('Escrow status:', escrow?.status);
+  console.log('ESCROW_STATUS.ACTIVE:', ESCROW_STATUS.ACTIVE);
+  console.log('Should show client buttons:', isClient && escrow?.status === ESCROW_STATUS.ACTIVE);
+  console.log('Should show freelancer buttons:', isFreelancer && escrow?.status === ESCROW_STATUS.ACTIVE && !escrow?.workCompleted);
+
   const handleAction = async (
     action: () => Promise<{ txId: string }>,
     actionName: string
@@ -541,8 +553,8 @@ function ProgressStep({
           completed
             ? 'bg-green-500 text-white'
             : active
-            ? 'bg-primary text-white'
-            : 'bg-surface text-slate-400'
+              ? 'bg-primary text-white'
+              : 'bg-surface text-slate-400'
         )}
       >
         {icon || (completed ? <CheckCircle className="h-5 w-5" /> : null)}
