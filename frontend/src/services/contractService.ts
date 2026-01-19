@@ -37,6 +37,7 @@ export async function createEscrow(
     network: NETWORK as 'testnet' | 'mainnet',
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return { txId: (response as any).txid || (response as any).txId || '' };
 }
 
@@ -48,6 +49,7 @@ export async function completeWork(escrowId: number): Promise<{ txId: string }> 
     network: NETWORK as 'testnet' | 'mainnet',
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return { txId: (response as any).txid || (response as any).txId || '' };
 }
 
@@ -59,6 +61,7 @@ export async function approveRelease(escrowId: number): Promise<{ txId: string }
     network: NETWORK as 'testnet' | 'mainnet',
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return { txId: (response as any).txid || (response as any).txId || '' };
 }
 
@@ -70,6 +73,7 @@ export async function initiateRefund(escrowId: number): Promise<{ txId: string }
     network: NETWORK as 'testnet' | 'mainnet',
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return { txId: (response as any).txid || (response as any).txId || '' };
 }
 
@@ -84,6 +88,7 @@ export async function initiateDispute(escrowId: number, reason: string): Promise
     network: NETWORK as 'testnet' | 'mainnet',
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return { txId: (response as any).txid || (response as any).txId || '' };
 }
 
@@ -98,6 +103,7 @@ export async function resolveDispute(escrowId: number, resolution: 0 | 1 | 2): P
     network: NETWORK as 'testnet' | 'mainnet',
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return { txId: (response as any).txid || (response as any).txId || '' };
 }
 
@@ -109,6 +115,7 @@ export async function claimExpiredRefund(escrowId: number): Promise<{ txId: stri
     network: NETWORK as 'testnet' | 'mainnet',
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return { txId: (response as any).txid || (response as any).txId || '' };
 }
 

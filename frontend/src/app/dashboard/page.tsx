@@ -24,7 +24,7 @@ export default function DashboardPage() {
   const [statusFilter, setStatusFilter] = useState<number | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const escrows = allUserEscrows || [];
+  const escrows = useMemo(() => allUserEscrows || [], [allUserEscrows]);
 
   const filteredEscrows = useMemo(() => {
     let result = [...escrows];
