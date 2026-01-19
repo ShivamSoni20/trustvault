@@ -19,8 +19,13 @@ export function useWallet() {
     const checkConnection = async () => {
       if (isConnected()) {
         const userData = getLocalStorage();
+        console.log('=== Wallet Check Connection ===');
+        console.log('userData:', userData);
+        console.log('addresses:', userData?.addresses);
+        console.log('stx addresses:', userData?.addresses?.stx);
         if (userData?.addresses?.stx?.[0]?.address) {
           const addr = userData.addresses.stx[0].address;
+          console.log('Setting address from localStorage:', addr);
           setAddress(addr);
           setConnected(true);
           const bal = await getUserBalance(addr);
@@ -51,8 +56,13 @@ export function useWallet() {
       const response = await connect();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const authResponse = response as any;
+      console.log('=== Wallet Connect Response ===');
+      console.log('authResponse:', authResponse);
+      console.log('addresses:', authResponse?.addresses);
+      console.log('stx addresses:', authResponse?.addresses?.stx);
       if (authResponse && authResponse.addresses?.stx?.[0]?.address) {
         const addr = authResponse.addresses.stx[0].address;
+        console.log('Setting address from connect:', addr);
         setAddress(addr);
         setConnected(true);
         const bal = await getUserBalance(addr);
