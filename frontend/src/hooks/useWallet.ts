@@ -49,6 +49,7 @@ export function useWallet() {
       }
 
       const response = await connect();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const authResponse = response as any;
       if (authResponse && authResponse.addresses?.stx?.[0]?.address) {
         const addr = authResponse.addresses.stx[0].address;
