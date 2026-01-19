@@ -64,9 +64,9 @@ export default function EscrowDetailPage() {
   const [showResolveModal, setShowResolveModal] = useState(false);
   const [disputeReason, setDisputeReason] = useState('');
 
-  const isClient = address === escrow?.client;
-  const isFreelancer = address === escrow?.freelancer;
-  const isArbitrator = address === CONTRACT_ADDRESS;
+  const isClient = address?.toLowerCase() === escrow?.client?.toLowerCase();
+  const isFreelancer = address?.toLowerCase() === escrow?.freelancer?.toLowerCase();
+  const isArbitrator = address?.toLowerCase() === CONTRACT_ADDRESS.toLowerCase();
 
   // Debug logging
   console.log('=== Escrow Detail Debug ===');

@@ -30,10 +30,10 @@ export async function getTotalEscrows(): Promise<number> {
 
     if (response.data.okay && response.data.result) {
       const cv = hexToCV(response.data.result);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const parsed: any = cvToValue(cv);
-      // cvToValue returns { type: 'uint', value: '...' }
-      return Number(parsed.value);
+      const parsed = cvToValue(cv);
+      // Robust parsing: handle raw bigint, wrapped object, or simple value
+      const val = typeof parsed === 'bigint' ? parsed : ((parsed as any).value !== undefined ? (parsed as any).value : parsed);
+      return Number(val);
     }
     return 0;
   } catch (error) {
@@ -57,44 +57,48 @@ export async function getEscrow(escrowId: number): Promise<EscrowDisplay | null>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const parsed: any = cvToValue(cv);
 
-      if (!parsed || !parsed.value) return null;
+      if (!parsed) return null;
 
-      // cvToValue returns { type: 'tuple', value: { field1: {type, value}, ... } }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const tupleData: any = parsed.value;
+      // Robust tuple access: handle wrapped {type, value} or raw object
+      const tupleData: any = (parsed.value && typeof parsed.value === 'object') ? parsed.value : parsed;
 
       const currentBlockHeight = await getCurrentBlockHeight();
-      const deadlineBlock = Number(tupleData.deadline.value);
+
+      // Handle nested {type, value} fields vs raw fields
+      const getVal = (field: any) => (field && typeof field === 'object' && field.value !== undefined) ? field.value : field;
+
+      const deadlineBlock = Number(getVal(tupleData.deadline));
       const deadlineDate = blockHeightToDate(deadlineBlock, currentBlockHeight);
 
-      const status = Number(tupleData.status.value);
-      const amount = Number(tupleData.amount.value) / 1_000_000;
+      const status = Number(getVal(tupleData.status));
+      const amount = Number(getVal(tupleData.amount)) / 1_000_000;
 
       // Handle metadata (optional string)
       let metadata = null;
-      if (tupleData.metadata && tupleData.metadata.value) {
-        const metaValue = tupleData.metadata.value;
-        metadata = typeof metaValue === 'string' ? metaValue : (metaValue.value || null);
+      const metaObj = getVal(tupleData.metadata);
+      if (metaObj) {
+        // Optionals can be { type: 'some', value: '...' } or just the value
+        metadata = (metaObj.value !== undefined) ? metaObj.value : metaObj;
       }
 
       // Handle dispute reason (optional string)
       let disputeReason = null;
-      if (tupleData['dispute-reason'] && tupleData['dispute-reason'].value) {
-        const reasonValue = tupleData['dispute-reason'].value;
-        disputeReason = typeof reasonValue === 'string' ? reasonValue : (reasonValue.value || null);
+      const disputeObj = getVal(tupleData['dispute-reason']);
+      if (disputeObj) {
+        disputeReason = (disputeObj.value !== undefined) ? disputeObj.value : disputeObj;
       }
 
       return {
         id: escrowId,
-        client: tupleData.client.value,
-        freelancer: tupleData.freelancer.value,
+        client: getVal(tupleData.client),
+        freelancer: getVal(tupleData.freelancer),
         amount: amount,
         deadline: deadlineDate,
         status: status,
         statusLabel: getStatusLabel(status),
-        metadata: metadata,
+        metadata: typeof metadata === 'string' ? metadata : null,
         workCompleted: status === 2 || status === 5,
-        disputeReason: disputeReason,
+        disputeReason: typeof disputeReason === 'string' ? disputeReason : null,
         isExpired: currentBlockHeight >= deadlineBlock,
         daysRemaining: getDaysRemaining(deadlineDate),
       };
