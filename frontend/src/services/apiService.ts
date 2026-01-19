@@ -30,8 +30,10 @@ export async function getTotalEscrows(): Promise<number> {
 
     if (response.data.okay && response.data.result) {
       const cv = hexToCV(response.data.result);
-      const value = cvToValue(cv);
-      return Number(value);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const parsed: any = cvToValue(cv);
+      // cvToValue returns { type: 'uint', value: '...' }
+      return Number(parsed.value);
     }
     return 0;
   } catch (error) {
@@ -53,47 +55,50 @@ export async function getEscrow(escrowId: number): Promise<EscrowDisplay | null>
     if (response.data.okay && response.data.result) {
       const cv = hexToCV(response.data.result);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const value: any = cvToValue(cv);
+      const parsed: any = cvToValue(cv);
 
-      if (!value) return null; // None returns null/undefined from cvToValue
+      if (!parsed || !parsed.value) return null;
 
-      // cvToValue unwraps the tuple. Properties are direct values (bigint, string, etc)
+      // cvToValue returns { type: 'tuple', value: { field1: {type, value}, ... } }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const tupleData: any = parsed.value;
+
       const currentBlockHeight = await getCurrentBlockHeight();
-      const deadlineBlock = Number(value.deadline); // bigint to number
+      const deadlineBlock = Number(tupleData.deadline.value);
       const deadlineDate = blockHeightToDate(deadlineBlock, currentBlockHeight);
 
-      const status = Number(value.status);
-      const amount = Number(value.amount) / 1_000_000;
+      const status = Number(tupleData.status.value);
+      const amount = Number(tupleData.amount.value) / 1_000_000;
 
       // Handle metadata (optional string)
       let metadata = null;
-      if (value.metadata && value.metadata.type === 'some') {
-        metadata = value.metadata.value;
-      } else if (value.metadata && typeof value.metadata === 'string') {
-        // sometimes cvToValue unwraps completely if it's simple
-        metadata = value.metadata;
+      if (tupleData.metadata && tupleData.metadata.value) {
+        const metaValue = tupleData.metadata.value;
+        metadata = typeof metaValue === 'string' ? metaValue : (metaValue.value || null);
       }
 
       // Handle dispute reason (optional string)
       let disputeReason = null;
-      if (value['dispute-reason'] && value['dispute-reason'].type === 'some') {
-        disputeReason = value['dispute-reason'].value;
+      if (tupleData['dispute-reason'] && tupleData['dispute-reason'].value) {
+        const reasonValue = tupleData['dispute-reason'].value;
+        disputeReason = typeof reasonValue === 'string' ? reasonValue : (reasonValue.value || null);
       }
 
       return {
         id: escrowId,
-        client: value.client,
-        freelancer: value.freelancer,
+        client: tupleData.client.value,
+        freelancer: tupleData.freelancer.value,
         amount: amount,
         deadline: deadlineDate,
         status: status,
         statusLabel: getStatusLabel(status),
         metadata: metadata,
-        workCompleted: status === 2 || status === 5, // Status 2 is Completed
+        workCompleted: status === 2 || status === 5,
         disputeReason: disputeReason,
         isExpired: currentBlockHeight >= deadlineBlock,
         daysRemaining: getDaysRemaining(deadlineDate),
       };
+
     }
     return null;
   } catch (error) {
@@ -116,6 +121,15 @@ export async function getUserEscrows(address: string): Promise<EscrowDisplay[]> 
     }
 
     const results = await Promise.all(promises);
+
+    // Debug logging
+    console.log(`[TrustVault] Fetched ${results.length} escrows. User address: ${address}`);
+    results.forEach(e => {
+      if (e) {
+        console.log(`- Escrow #${e.id}: Client=${e.client}, Freelancer=${e.freelancer}, Match=${e.client === address || e.freelancer === address}`);
+      }
+    });
+
     return results.filter((e): e is EscrowDisplay =>
       e !== null && (e.client === address || e.freelancer === address)
     ).reverse();
