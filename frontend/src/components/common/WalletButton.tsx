@@ -22,7 +22,7 @@ export function WalletButton() {
         title: 'Wallet Connected',
         message: 'Successfully connected to your wallet',
       });
-    } catch (error) {
+    } catch {
       addToast({
         type: 'error',
         title: 'Connection Failed',
@@ -87,7 +87,7 @@ export function WalletButton() {
               <p className="text-xs text-slate-400 mb-1">Connected Account</p>
               <p className="font-mono text-sm break-all">{address}</p>
             </div>
-            
+
             <div className="p-4 border-b border-slate-700">
               <p className="text-xs text-slate-400 mb-1">Balance</p>
               <p className="text-lg font-semibold">{balance.toFixed(6)} STX</p>
@@ -101,7 +101,7 @@ export function WalletButton() {
                 <Copy className="h-4 w-4 text-slate-400" />
                 <span>Copy Address</span>
               </button>
-              
+
               <a
                 href={getExplorerUrl('address', address!)}
                 target="_blank"
@@ -111,7 +111,7 @@ export function WalletButton() {
                 <ExternalLink className="h-4 w-4 text-slate-400" />
                 <span>View on Explorer</span>
               </a>
-              
+
               <button
                 onClick={handleDisconnect}
                 className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-red-500/10 text-red-400 transition-colors"

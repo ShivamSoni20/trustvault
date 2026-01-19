@@ -15,6 +15,7 @@ export async function createEscrow(
   const microAmount = parseUSDCxToMicro(amount);
 
   // Validate metadata length (contract limit is 200 bytes)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let metadataClv: any = Cl.none();
   if (metadata) {
     if (metadata.length > 200) {

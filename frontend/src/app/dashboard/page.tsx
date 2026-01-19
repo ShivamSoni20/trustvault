@@ -2,11 +2,10 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { Plus, Search, Filter, ExternalLink, Clock, AlertTriangle, Loader2 } from 'lucide-react';
+import { Plus, Search, Loader2, AlertTriangle, Clock, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Card, CardContent } from '@/components/ui/Card';
 import { useWallet } from '@/hooks/useWallet';
 import { useTotalEscrows, useUserEscrows } from '@/hooks/useEscrow';
 import { truncateAddress, formatUSDCx, formatDate, getDaysRemaining } from '@/utils/formatters';
@@ -53,6 +52,7 @@ export default function DashboardPage() {
       );
     }
 
+    return result;
     return result;
   }, [escrows, activeTab, statusFilter, searchQuery, address]);
 

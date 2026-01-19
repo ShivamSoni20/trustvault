@@ -1,16 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
-import { 
-  ChevronDown, 
-  ChevronRight, 
-  ExternalLink, 
-  Wallet, 
-  FileCheck, 
-  Send, 
-  RefreshCw, 
-  Scale,
+import {
+  ChevronDown,
+  ChevronRight,
+  ExternalLink,
+  Wallet,
+  FileCheck,
+  Send,
   HelpCircle,
   MessageCircle,
   Mail
@@ -37,7 +34,7 @@ const faqItems = [
     answer: 'As a client, you can request a refund if work has not started. Once the freelancer has begun work, you would need to either release the funds, wait for the deadline, or initiate a dispute.',
   },
   {
-    question: 'What happens if there\'s a dispute?',
+    question: 'What happens if there&apos;s a dispute?',
     answer: 'If you initiate a dispute, an arbitrator will review the case. They can decide to: refund 100% to the client, release 100% to the freelancer, or split the funds 50/50.',
   },
   {
@@ -165,7 +162,7 @@ export default function HelpPage() {
               <li className="flex gap-4">
                 <span className="w-8 h-8 bg-primary rounded-full flex items-center justify-center shrink-0">3</span>
                 <div>
-                  <p className="font-medium">Click "Connect Wallet" on TrustVault</p>
+                  <p className="font-medium">Click &quot;Connect Wallet&quot; on TrustVault</p>
                   <p className="text-slate-400 text-sm">Use the button in the top-right corner of the page.</p>
                 </div>
               </li>

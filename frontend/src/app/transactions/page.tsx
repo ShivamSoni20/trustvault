@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { ExternalLink, Download, ArrowUpRight, ArrowDownLeft, Scale, CheckCircle, RefreshCw, AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Card, CardContent } from '@/components/ui/Card';
 import { useWallet } from '@/hooks/useWallet';
 import { useTransactions } from '@/hooks/useEscrow';
 import { formatDateTime, getExplorerUrl } from '@/utils/formatters';

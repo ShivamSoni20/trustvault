@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { hexToCV, cvToJSON, Cl, cvToValue } from '@stacks/transactions';
+import { hexToCV, Cl, cvToValue } from '@stacks/transactions';
 import { API_BASE_URL, CONTRACT_ADDRESS, CONTRACT_NAME } from '@/utils/constants';
 import type { EscrowDisplay, ContractStats, TransactionRecord } from '@/types';
 import { getStatusLabel, getDaysRemaining, blockHeightToDate } from '@/utils/formatters';
@@ -52,6 +52,7 @@ export async function getEscrow(escrowId: number): Promise<EscrowDisplay | null>
 
     if (response.data.okay && response.data.result) {
       const cv = hexToCV(response.data.result);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const value: any = cvToValue(cv);
 
       if (!value) return null; // None returns null/undefined from cvToValue
@@ -104,7 +105,6 @@ export async function getEscrow(escrowId: number): Promise<EscrowDisplay | null>
 export async function getUserEscrows(address: string): Promise<EscrowDisplay[]> {
   try {
     const total = await getTotalEscrows();
-    const escrows: EscrowDisplay[] = [];
 
     // In a real app, we'd use an indexer. Here we'll fetch all and filter.
     // For performance, we limit to the last 50 escrows if there are many.
@@ -186,6 +186,7 @@ export async function getAddressTransactions(address: string): Promise<Transacti
           escrowId = -1; // Flag as "check explorer" or similar
         } else {
           // For others, it's usually the first argument
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const idArg = args.find((a: any) => a.name === 'escrow-id');
           if (idArg) {
             const hex = idArg.repr.slice(1); // remove 'u'
