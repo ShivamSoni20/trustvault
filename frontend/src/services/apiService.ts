@@ -30,9 +30,9 @@ export async function getTotalEscrows(): Promise<number> {
 
     if (response.data.okay && response.data.result) {
       const cv = hexToCV(response.data.result);
-      const parsed = cvToValue(cv);
+      const parsed = cvToValue(cv) as unknown;
       // Robust parsing: handle raw bigint, wrapped object, or simple value
-      const val = typeof parsed === 'bigint' ? parsed : ((parsed as any).value !== undefined ? (parsed as any).value : parsed);
+      const val = typeof parsed === 'bigint' ? parsed : ((parsed as Record<string, unknown>)?.value !== undefined ? (parsed as Record<string, unknown>).value : parsed);
       return Number(val);
     }
     return 0;
@@ -54,18 +54,17 @@ export async function getEscrow(escrowId: number): Promise<EscrowDisplay | null>
 
     if (response.data.okay && response.data.result) {
       const cv = hexToCV(response.data.result);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const parsed: any = cvToValue(cv);
+      const parsed = cvToValue(cv) as Record<string, unknown>;
 
       if (!parsed) return null;
 
       // Robust tuple access: handle wrapped {type, value} or raw object
-      const tupleData: any = (parsed.value && typeof parsed.value === 'object') ? parsed.value : parsed;
+      const tupleData = (parsed.value && typeof parsed.value === 'object') ? (parsed.value as Record<string, unknown>) : parsed;
 
       const currentBlockHeight = await getCurrentBlockHeight();
 
       // Handle nested {type, value} fields vs raw fields
-      const getVal = (field: any) => (field && typeof field === 'object' && field.value !== undefined) ? field.value : field;
+      const getVal = (field: unknown) => (field && typeof field === 'object' && (field as Record<string, unknown>).value !== undefined) ? (field as Record<string, unknown>).value : field;
 
       const deadlineBlock = Number(getVal(tupleData.deadline));
       const deadlineDate = blockHeightToDate(deadlineBlock, currentBlockHeight);
@@ -78,20 +77,20 @@ export async function getEscrow(escrowId: number): Promise<EscrowDisplay | null>
       const metaObj = getVal(tupleData.metadata);
       if (metaObj) {
         // Optionals can be { type: 'some', value: '...' } or just the value
-        metadata = (metaObj.value !== undefined) ? metaObj.value : metaObj;
+        metadata = (metaObj && typeof metaObj === 'object' && 'value' in metaObj) ? (metaObj as Record<string, unknown>).value : metaObj;
       }
 
       // Handle dispute reason (optional string)
       let disputeReason = null;
       const disputeObj = getVal(tupleData['dispute-reason']);
       if (disputeObj) {
-        disputeReason = (disputeObj.value !== undefined) ? disputeObj.value : disputeObj;
+        disputeReason = (disputeObj && typeof disputeObj === 'object' && 'value' in disputeObj) ? (disputeObj as Record<string, unknown>).value : disputeObj;
       }
 
       return {
         id: escrowId,
-        client: getVal(tupleData.client),
-        freelancer: getVal(tupleData.freelancer),
+        client: getVal(tupleData.client) as string,
+        freelancer: getVal(tupleData.freelancer) as string,
         amount: amount,
         deadline: deadlineDate,
         status: status,

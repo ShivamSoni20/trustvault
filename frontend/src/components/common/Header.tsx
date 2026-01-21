@@ -9,9 +9,10 @@ import { cn } from '@/lib/utils';
 
 const navLinks = [
   { href: '/', label: 'Home' },
+  { href: '/jobs', label: 'Marketplace' },
   { href: '/dashboard', label: 'Dashboard' },
-  { href: '/create-escrow', label: 'Create Escrow' },
-  { href: '/transactions', label: 'Transactions' },
+  { href: '/post-job', label: 'Post Job' },
+  { href: '/bids', label: 'My Bids' },
   { href: '/help', label: 'Help' },
 ];
 
@@ -25,7 +26,7 @@ export function Header() {
         <div className="flex items-center justify-between h-16">
           <Link href="/" className="flex items-center gap-2">
             <Shield className="h-8 w-8 text-primary" />
-            <span className="text-xl font-bold gradient-text">TrustVault</span>
+            <span className="text-xl font-bold gradient-text">TrustWork</span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-1">

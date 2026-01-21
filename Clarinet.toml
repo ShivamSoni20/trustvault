@@ -1,27 +1,38 @@
 [project]
-name = "usdcx-escrow"
-description = "USDCx Escrow Service for Freelancers - Secure, trustless payments powered by Stacks and Bitcoin"
-authors = ["TrustVault Team"]
+name = "trustwork-marketplace"
+description = "TrustWork - Decentralized Job Marketplace with Bidding & Auto-Release"
+authors = ["TrustWork Team"]
 telemetry = true
 cache_dir = "./.cache"
 
-# Main Escrow Contract
-[contracts.usdcx-escrow]
-path = "contracts/usdcx-escrow.clar"
+[contracts.trustwork-marketplace]
+path = "contracts/trustwork-marketplace.clar"
 epoch = "latest"
-depends_on = ["ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.usdcx-v1"]
+depends_on = ["usdcx-v1"]
 
-# External USDCx Token Contract (Testnet)
-[[requirements]]
-contract_id = "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.usdcx-v1"
+[contracts.usdcx-v1]
+path = "contracts/usdcx-v1.clar"
+epoch = "latest"
+depends_on = []
+
 [repl.analysis]
 passes = ["check_checker"]
-check_checker = { trusted_sender = false, trusted_caller = false, callee_filter = false }
 
-# Check-checker settings:
-# trusted_sender: if true, inputs are trusted after tx_sender has been checked.
-# trusted_caller: if true, inputs are trusted after contract-caller has been checked.
-# callee_filter: if true, untrusted data may be passed into a private function without a
-# warning, if it gets checked inside. This check will also propagate up to the
-# caller.
-# More informations: https://www.hiro.so/blog/new-safety-checks-in-clarinet
+[repl.analysis.check_checker]
+trusted_sender = false
+trusted_caller = false
+callee_filter = false
+
+[network.simnet]
+name = "simnet"
+
+[network.devnet]
+name = "devnet"
+
+[network.testnet]
+name = "testnet"
+node_rpc_address = "https://api.testnet.stacks.co:443"
+
+[network.mainnet]
+name = "mainnet"
+node_rpc_address = "https://api.stacks.co:443"
