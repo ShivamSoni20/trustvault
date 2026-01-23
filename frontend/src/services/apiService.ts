@@ -1,8 +1,8 @@
 import axios from 'axios';
 import { hexToCV, Cl, cvToValue } from '@stacks/transactions';
 import { API_BASE_URL, CONTRACT_ADDRESS, CONTRACT_NAME } from '@/utils/constants';
-import type { EscrowDisplay, ContractStats, TransactionRecord } from '@/types';
-import { getStatusLabel, getDaysRemaining, blockHeightToDate } from '@/utils/formatters';
+import type { Job, JobDisplay, Bid, ContractStats, TransactionRecord } from '@/types';
+import { getStatusLabel, blockHeightToDate } from '@/utils/formatters';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -18,10 +18,10 @@ export async function getCurrentBlockHeight(): Promise<number> {
   }
 }
 
-export async function getTotalEscrows(): Promise<number> {
+export async function getTotalJobs(): Promise<number> {
   try {
     const response = await api.post(
-      `/v2/contracts/call-read/${CONTRACT_ADDRESS}/${CONTRACT_NAME}/get-total-escrows`,
+      `/v2/contracts/call-read/${CONTRACT_ADDRESS}/${CONTRACT_NAME}/get-total-jobs`,
       {
         sender: CONTRACT_ADDRESS,
         arguments: [],
@@ -30,198 +30,136 @@ export async function getTotalEscrows(): Promise<number> {
 
     if (response.data.okay && response.data.result) {
       const cv = hexToCV(response.data.result);
-      const parsed = cvToValue(cv) as unknown;
-      // Robust parsing: handle raw bigint, wrapped object, or simple value
-      const val = typeof parsed === 'bigint' ? parsed : ((parsed as Record<string, unknown>)?.value !== undefined ? (parsed as Record<string, unknown>).value : parsed);
+      const val = cvToValue(cv);
       return Number(val);
     }
     return 0;
   } catch (error) {
-    console.error('Failed to fetch total escrows:', error);
+    console.error('Failed to fetch total jobs:', error);
     return 0;
   }
 }
 
-export async function getEscrow(escrowId: number): Promise<EscrowDisplay | null> {
+export async function getJob(jobId: number): Promise<JobDisplay | null> {
   try {
     const response = await api.post(
-      `/v2/contracts/call-read/${CONTRACT_ADDRESS}/${CONTRACT_NAME}/get-escrow`,
+      `/v2/contracts/call-read/${CONTRACT_ADDRESS}/${CONTRACT_NAME}/get-job`,
       {
         sender: CONTRACT_ADDRESS,
-        arguments: [Cl.serialize(Cl.uint(escrowId))],
+        arguments: [Cl.serialize(Cl.uint(jobId))],
       }
     );
 
     if (response.data.okay && response.data.result) {
       const cv = hexToCV(response.data.result);
-      const parsed = cvToValue(cv) as Record<string, unknown>;
+      const parsed = cvToValue(cv);
 
-      if (!parsed) return null;
+      if (!parsed || parsed.type === 'none' || parsed.value === null) return null;
 
-      // Robust tuple access: handle wrapped {type, value} or raw object
-      const tupleData = (parsed.value && typeof parsed.value === 'object') ? (parsed.value as Record<string, unknown>) : parsed;
-
+      const data = (parsed.value || parsed) as Record<string, any>;
       const currentBlockHeight = await getCurrentBlockHeight();
-
-      // Handle nested {type, value} fields vs raw fields
-      const getVal = (field: unknown) => (field && typeof field === 'object' && (field as Record<string, unknown>).value !== undefined) ? (field as Record<string, unknown>).value : field;
-
-      const deadlineBlock = Number(getVal(tupleData.deadline));
-      const deadlineDate = blockHeightToDate(deadlineBlock, currentBlockHeight);
-
-      const status = Number(getVal(tupleData.status));
-      const amount = Number(getVal(tupleData.amount)) / 1_000_000;
-
-      // Handle metadata (optional string)
-      let metadata = null;
-      const metaObj = getVal(tupleData.metadata);
-      if (metaObj) {
-        // Optionals can be { type: 'some', value: '...' } or just the value
-        metadata = (metaObj && typeof metaObj === 'object' && 'value' in metaObj) ? (metaObj as Record<string, unknown>).value : metaObj;
-      }
-
-      // Handle dispute reason (optional string)
-      let disputeReason = null;
-      const disputeObj = getVal(tupleData['dispute-reason']);
-      if (disputeObj) {
-        disputeReason = (disputeObj && typeof disputeObj === 'object' && 'value' in disputeObj) ? (disputeObj as Record<string, unknown>).value : disputeObj;
-      }
+      const deadlineBlock = Number(data.deadline.value || data.deadline);
 
       return {
-        id: escrowId,
-        client: getVal(tupleData.client) as string,
-        freelancer: getVal(tupleData.freelancer) as string,
-        amount: amount,
-        deadline: deadlineDate,
-        status: status,
-        statusLabel: getStatusLabel(status),
-        metadata: typeof metadata === 'string' ? metadata : null,
-        workCompleted: status === 2 || status === 5,
-        disputeReason: typeof disputeReason === 'string' ? disputeReason : null,
+        id: jobId,
+        creator: (data.creator.value || data.creator) as string,
+        title: (data.title.value || data.title) as string,
+        description: (data.description.value || data.description) as string,
+        budget: Number(data.budget.value || data.budget) / 1_000_000,
+        deadline: deadlineBlock,
+        status: Number(data.status.value || data.status),
+        statusLabel: getStatusLabel(Number(data.status.value || data.status)),
+        selectedFreelancer: data['selected-freelancer']?.value || null,
+        workSubmittedBy: data['work-submitted-by']?.value || null,
+        workSubmittedAt: null, // Not in contract but can be inferred from event if needed
+        workDescription: data['work-description']?.value || null,
+        creatorFeedback: data['creator-feedback']?.value || null,
+        createdAt: Number(data['created-at']?.value || data['created-at']),
+        category: (data.category.value || data.category) as string,
         isExpired: currentBlockHeight >= deadlineBlock,
-        daysRemaining: getDaysRemaining(deadlineDate),
+        blocksRemaining: Math.max(0, deadlineBlock - currentBlockHeight),
       };
-
     }
     return null;
   } catch (error) {
-    console.error(`Failed to fetch escrow ${escrowId}:`, error);
+    console.error(`Failed to fetch job ${jobId}:`, error);
     return null;
   }
 }
 
-export async function getUserEscrows(address: string): Promise<EscrowDisplay[]> {
+export async function getBid(jobId: number, freelancer: string): Promise<Bid | null> {
   try {
-    const total = await getTotalEscrows();
-
-    // In a real app, we'd use an indexer. Here we'll fetch all and filter.
-    // For performance, we limit to the last 50 escrows if there are many.
-    const startId = Math.max(0, total - 50);
-
-    const promises = [];
-    for (let i = startId; i < total; i++) {
-      promises.push(getEscrow(i));
-    }
-
-    const results = await Promise.all(promises);
-
-    // Debug logging
-    console.log(`[TrustVault] Fetched ${results.length} escrows. User address: ${address}`);
-    results.forEach(e => {
-      if (e) {
-        console.log(`- Escrow #${e.id}: Client=${e.client}, Freelancer=${e.freelancer}, Match=${e.client === address || e.freelancer === address}`);
+    const response = await api.post(
+      `/v2/contracts/call-read/${CONTRACT_ADDRESS}/${CONTRACT_NAME}/get-bid`,
+      {
+        sender: CONTRACT_ADDRESS,
+        arguments: [Cl.serialize(Cl.uint(jobId)), Cl.serialize(Cl.principal(freelancer))],
       }
-    });
+    );
 
-    return results.filter((e): e is EscrowDisplay =>
-      e !== null && (e.client === address || e.freelancer === address)
-    ).reverse();
+    if (response.data.okay && response.data.result) {
+      const cv = hexToCV(response.data.result);
+      const parsed = cvToValue(cv);
+      if (!parsed || parsed.value === null) return null;
+
+      const data = parsed.value as Record<string, any>;
+      return {
+        jobId,
+        freelancer,
+        bidAmount: BigInt(data['bid-amount'].value || data['bid-amount']),
+        proposal: (data.proposal.value || data.proposal) as string,
+        bidStatus: Number(data['bid-status'].value || data['bid-status']),
+        submittedAt: Number(data['submitted-at'].value || data['submitted-at']),
+      };
+    }
+    return null;
   } catch (error) {
-    console.error('Failed to fetch user escrows:', error);
+    console.error(`Failed to fetch bid for job ${jobId} freelancer ${freelancer}:`, error);
+    return null;
+  }
+}
+
+export async function getAllJobs(): Promise<JobDisplay[]> {
+  try {
+    const total = await getTotalJobs();
+    const promises = [];
+    for (let i = 0; i < total; i++) {
+      promises.push(getJob(i));
+    }
+    const results = await Promise.all(promises);
+    return results.filter((j): j is JobDisplay => j !== null).reverse();
+  } catch (error) {
+    console.error('Failed to fetch all jobs:', error);
     return [];
   }
 }
 
 export async function getContractStats(): Promise<ContractStats> {
-  const totalEscrows = await getTotalEscrows();
-
+  const jobs = await getAllJobs();
   return {
-    totalEscrows,
-    totalValueLocked: 0,
-    activeEscrows: 0,
-    disputedEscrows: 0,
-    completedEscrows: 0,
+    totalJobs: jobs.length,
+    totalValueLocked: jobs.reduce((acc, j) => acc + (j.status < 4 ? j.budget : 0), 0),
+    completedJobs: jobs.filter(j => j.status === 4).length,
+    activeJobs: jobs.filter(j => j.status === 2 || j.status === 3).length,
   };
 }
 
-export async function getUserBalance(address: string): Promise<number> {
-  try {
-    const response = await api.get(`/extended/v1/address/${address}/balances`);
-    return response.data.stx?.balance ? Number(response.data.stx.balance) / 1_000_000 : 0;
-  } catch (error) {
-    console.error('Failed to fetch balance:', error);
-    return 0;
-  }
-}
-
-export async function getAddressTransactions(address: string): Promise<TransactionRecord[]> {
+export async function getUserTransactions(address: string): Promise<TransactionRecord[]> {
   try {
     const response = await api.get(`/extended/v1/address/${address}/transactions`, {
-      params: {
-        limit: 50,
-      },
+      params: { limit: 50 },
     });
 
     const results = response.data.results || [];
-    const transactions: TransactionRecord[] = [];
-
-    for (const tx of results) {
-      if (tx.tx_type !== 'contract_call' || tx.contract_call?.contract_id !== `${CONTRACT_ADDRESS}.${CONTRACT_NAME}`) {
-        continue;
-      }
-
-      const functionName = tx.contract_call.function_name;
-      let type: TransactionRecord['type'] | null = null;
-
-      switch (functionName) {
-        case 'create-escrow': type = 'create'; break;
-        case 'complete-work': type = 'complete'; break;
-        case 'approve-release': type = 'release'; break;
-        case 'initiate-refund': type = 'refund'; break;
-        case 'initiate-dispute': type = 'dispute'; break;
-        case 'resolve-dispute': type = 'resolve'; break;
-      }
-
-      if (type) {
-        // Extract escrow-id from function arguments if possible
-        // This is simplified; real parsing depends on tx structure
-        let escrowId = 0;
-        const args = tx.contract_call.function_args || [];
-        if (type === 'create') {
-          // For create, the ID is in the return value, which isn't in the base tx object easily
-          // We'd need to fetch the full tx details or use an indexer
-          escrowId = -1; // Flag as "check explorer" or similar
-        } else {
-          // For others, it's usually the first argument
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const idArg = args.find((a: any) => a.name === 'escrow-id');
-          if (idArg) {
-            const hex = idArg.repr.slice(1); // remove 'u'
-            escrowId = parseInt(hex);
-          }
-        }
-
-        transactions.push({
-          txId: tx.tx_id,
-          type,
-          escrowId,
-          timestamp: new Date(tx.burn_block_time * 1000),
-          status: tx.tx_status === 'success' ? 'confirmed' : tx.tx_status === 'pending' ? 'pending' : 'failed',
-        });
-      }
-    }
-
-    return transactions;
+    return results
+      .filter((tx: any) => tx.tx_type === 'contract_call' && tx.contract_call?.contract_id === `${CONTRACT_ADDRESS}.${CONTRACT_NAME}`)
+      .map((tx: any) => ({
+        txId: tx.tx_id,
+        type: tx.contract_call.function_name as TransactionRecord['type'],
+        jobId: -1, // Would need deeper parsing
+        timestamp: new Date(tx.burn_block_time * 1000),
+        status: tx.tx_status === 'success' ? 'confirmed' : tx.tx_status === 'pending' ? 'pending' : 'failed',
+      }));
   } catch (error) {
     console.error('Failed to fetch transactions:', error);
     return [];

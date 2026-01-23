@@ -1,281 +1,167 @@
 'use client';
 
 import Link from 'next/link';
-import { 
-  ArrowRight, 
-  Shield, 
-  Scale, 
-  Zap, 
-  Wallet,
-  FileCheck,
-  CheckCircle,
-  Send,
-  Star,
-  TrendingUp,
-  Lock,
-  Users
-} from 'lucide-react';
-import { Button } from '@/components/ui/Button';
-import { Card, CardContent } from '@/components/ui/Card';
-import { useContractStats } from '@/hooks/useEscrow';
-import { formatUSDCx } from '@/utils/formatters';
+import { useAllJobs, useContractStats } from '@/hooks/useJobs';
+import { formatUSDCx, truncateAddress } from '@/utils/formatters';
+import { JOB_STATUS } from '@/utils/constants';
+import { FiArrowRight, FiBriefcase, FiShield, FiZap, FiCheckCircle } from 'react-icons/fi';
 
-export default function HomePage() {
+export default function LandingPage() {
+  const { data: jobs = [], isLoading: jobsLoading } = useAllJobs();
   const { data: stats } = useContractStats();
 
+  const featuredJobs = jobs.filter(j => j.status === JOB_STATUS.OPEN).slice(0, 3);
+
   return (
-    <div>
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-accent/10" />
-        <div className="absolute inset-0">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/30 rounded-full blur-3xl" />
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent/20 rounded-full blur-3xl" />
-        </div>
+    <div className="flex flex-col gap-24 pb-24">
+      {/* Hero Section */}
+      <section className="relative pt-32 px-6 overflow-hidden">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[500px] bg-emerald-500/10 blur-[120px] rounded-full -z-10" />
         
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32">
-          <div className="text-center max-w-4xl mx-auto">
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold mb-6">
-              <span className="gradient-text">TrustVault</span>
-              <br />
-              <span className="text-white">Where Trust Meets Blockchain</span>
-            </h1>
-            <p className="text-lg md:text-xl text-slate-300 mb-8 max-w-2xl mx-auto">
-              Secure escrow payments for freelancers, powered by Bitcoin. 
-              Smart contracts hold funds securely until work is complete.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href="/create-escrow">
-                <Button size="xl" className="gap-2 w-full sm:w-auto">
-                  Get Started
-                  <ArrowRight className="h-5 w-5" />
-                </Button>
-              </Link>
-              <Link href="/dashboard">
-                <Button variant="secondary" size="xl" className="w-full sm:w-auto">
-                  View Dashboard
-                </Button>
-              </Link>
+        <div className="max-w-7xl mx-auto text-center flex flex-col items-center gap-8">
+          <div className="animate-reveal stagger-1 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-emerald-400 text-sm font-medium">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            Live on Stacks Testnet
+          </div>
+          
+          <h1 className="animate-reveal stagger-2 text-6xl md:text-8xl font-bold max-w-4xl leading-[1.1]">
+            The Trustless Bridge for <span className="text-emerald-500 text-glow-emerald italic font-serif">Global Talent</span>
+          </h1>
+          
+          <p className="animate-reveal stagger-3 text-xl text-slate-400 max-w-2xl leading-relaxed">
+            TrustWork is a decentralized marketplace where work is secured by Bitcoin-finality escrow and paid in USDCx stablecoins.
+          </p>
+          
+          <div className="animate-reveal stagger-4 flex flex-wrap justify-center gap-4 mt-4">
+            <Link href="/post-job" className="btn-primary group">
+              Post a Job 
+              <FiArrowRight className="inline-block ml-2 group-hover:translate-x-1 transition-transform" />
+            </Link>
+            <Link href="/jobs" className="btn-secondary">
+              Browse Opportunities
+            </Link>
+          </div>
+
+          <div className="animate-reveal stagger-4 flex gap-12 mt-12 text-sm text-slate-500 uppercase tracking-widest font-mono">
+            <div>
+              <div className="text-2xl text-white font-sans font-bold mb-1">{stats?.totalJobs || 0}+</div>
+              Jobs Posted
+            </div>
+            <div>
+              <div className="text-2xl text-white font-sans font-bold mb-1">{formatUSDCx(stats?.totalValueLocked || 0)}</div>
+              USDCx Locked
+            </div>
+            <div>
+              <div className="text-2xl text-white font-sans font-bold mb-1">{stats?.completedJobs || 0}</div>
+              Paid Out
             </div>
           </div>
         </div>
       </section>
 
-      <section className="py-16 bg-surface/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <StatCard
-              label="Total Escrows"
-              value={stats?.totalEscrows || 0}
-              icon={<FileCheck className="h-6 w-6" />}
-            />
-            <StatCard
-              label="Value Locked"
-              value={`${formatUSDCx(stats?.totalValueLocked || 0)} USDCx`}
-              icon={<Lock className="h-6 w-6" />}
-            />
-            <StatCard
-              label="Active Escrows"
-              value={stats?.activeEscrows || 0}
-              icon={<TrendingUp className="h-6 w-6" />}
-            />
-            <StatCard
-              label="Success Rate"
-              value="99.2%"
-              icon={<CheckCircle className="h-6 w-6" />}
-            />
-          </div>
+      {/* Features Section */}
+      <section className="max-w-7xl mx-auto px-6 w-full">
+        <div className="grid md:grid-cols-3 gap-8">
+          {[
+            {
+              icon: <FiShield className="text-emerald-500 w-8 h-8" />,
+              title: "Escrow Protection",
+              desc: "Payments are locked in smart contracts until work is approved. No middleman, no chargebacks."
+            },
+            {
+              icon: <FiZap className="text-indigo-500 w-8 h-8" />,
+              title: "Auto-Release",
+              desc: "Freelancers get paid automatically after 7 days if the client goes silent. Built-in fairness."
+            },
+            {
+              icon: <FiBriefcase className="text-amber-500 w-8 h-8" />,
+              title: "Transparent Bidding",
+              desc: "Review proposals, negotiate rates, and select the best talent with on-chain reputation."
+            }
+          ].map((f, i) => (
+            <div key={i} className="glass-card p-8 hover:bg-white/[0.05] transition-colors group">
+              <div className="mb-6 p-3 bg-white/5 rounded-2xl w-fit group-hover:scale-110 transition-transform">{f.icon}</div>
+              <h3 className="text-2xl mb-4">{f.title}</h3>
+              <p className="text-slate-400 leading-relaxed">{f.desc}</p>
+            </div>
+          ))}
         </div>
       </section>
 
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Why Choose <span className="gradient-text">TrustVault</span>?
-            </h2>
-            <p className="text-slate-400 max-w-2xl mx-auto">
-              Built on Bitcoin security through Stacks, our platform ensures your payments are safe, transparent, and fair.
-            </p>
+      {/* Featured Jobs */}
+      <section className="max-w-7xl mx-auto px-6 w-full">
+        <div className="flex justify-between items-end mb-12">
+          <div>
+            <h2 className="text-4xl mb-4">Latest Opportunities</h2>
+            <p className="text-slate-400 italic">Fresh jobs from the TrustWork community.</p>
           </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            <FeatureCard
-              icon={<Shield className="h-8 w-8" />}
-              title="Trustless Payments"
-              description="Smart contracts hold funds securely. No intermediaries, no hidden fees, no surprises."
-            />
-            <FeatureCard
-              icon={<Scale className="h-8 w-8" />}
-              title="Fair Disputes"
-              description="Transparent arbitration process with clear resolution options. Your voice is heard."
-            />
-            <FeatureCard
-              icon={<Zap className="h-8 w-8" />}
-              title="Lightning Fast"
-              description="Bitcoin-backed finality on Stacks. Transactions settle quickly with blockchain security."
-            />
-          </div>
-        </div>
-      </section>
-
-      <section className="py-20 bg-surface/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              How It Works
-            </h2>
-            <p className="text-slate-400 max-w-2xl mx-auto">
-              Simple, secure, and straightforward. Get paid for your work in just a few steps.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-5 gap-4 md:gap-8">
-            <StepCard
-              number={1}
-              icon={<Wallet className="h-6 w-6" />}
-              title="Client Deposits"
-              description="Client creates escrow and deposits USDCx"
-            />
-            <StepCard
-              number={2}
-              icon={<FileCheck className="h-6 w-6" />}
-              title="Work Begins"
-              description="Freelancer starts the project"
-            />
-            <StepCard
-              number={3}
-              icon={<CheckCircle className="h-6 w-6" />}
-              title="Work Complete"
-              description="Freelancer marks work as done"
-            />
-            <StepCard
-              number={4}
-              icon={<Send className="h-6 w-6" />}
-              title="Client Approves"
-              description="Client reviews and releases funds"
-            />
-            <StepCard
-              number={5}
-              icon={<Star className="h-6 w-6" />}
-              title="Payment Received"
-              description="Freelancer gets paid instantly"
-            />
-          </div>
-        </div>
-      </section>
-
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Perfect For
-            </h2>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            <UseCaseCard
-              icon={<Users className="h-8 w-8" />}
-              title="Freelancers"
-              items={['Web Developers', 'Designers', 'Writers', 'Marketers']}
-            />
-            <UseCaseCard
-              icon={<Users className="h-8 w-8" />}
-              title="Businesses"
-              items={['Startups', 'Agencies', 'Small Business', 'Enterprise']}
-            />
-            <UseCaseCard
-              icon={<Users className="h-8 w-8" />}
-              title="Projects"
-              items={['One-time gigs', 'Contract work', 'Milestones', 'Retainers']}
-            />
-          </div>
-        </div>
-      </section>
-
-      <section className="py-20 bg-gradient-to-r from-primary/20 to-accent/20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Ready to Get Started?
-          </h2>
-          <p className="text-slate-300 mb-8">
-            Join thousands of freelancers and clients who trust TrustVault for secure payments.
-          </p>
-          <Link href="/create-escrow">
-            <Button size="xl" className="gap-2">
-              Create Your First Escrow
-              <ArrowRight className="h-5 w-5" />
-            </Button>
+          <Link href="/jobs" className="text-emerald-500 hover:text-emerald-400 font-semibold flex items-center gap-2">
+            View All Jobs <FiArrowRight />
           </Link>
         </div>
+
+        <div className="grid gap-6">
+          {jobsLoading ? (
+            Array(3).fill(0).map((_, i) => (
+              <div key={i} className="glass-card h-32 animate-pulse" />
+            ))
+          ) : featuredJobs.length > 0 ? (
+            featuredJobs.map((job) => (
+              <Link key={job.id} href={`/job/${job.id}`} className="glass-card p-6 flex flex-col md:flex-row justify-between items-center gap-6 hover:border-emerald-500/30 transition-all hover:bg-emerald-500/[0.02] group">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] uppercase tracking-wider text-slate-400 font-mono">
+                      {job.category}
+                    </span>
+                    <span className="text-slate-500 text-sm">{truncateAddress(job.creator)}</span>
+                  </div>
+                  <h3 className="text-xl group-hover:text-emerald-400 transition-colors">{job.title}</h3>
+                </div>
+                <div className="flex items-center gap-8">
+                  <div className="text-right">
+                    <div className="text-2xl font-bold text-white font-mono">{job.budget} USDCx</div>
+                    <div className="text-xs text-slate-500">Budget</div>
+                  </div>
+                  <div className="btn-secondary py-2 px-4 text-sm group-hover:bg-emerald-500 group-hover:text-black group-hover:border-emerald-500 transition-all">
+                    View Details
+                  </div>
+                </div>
+              </Link>
+            ))
+          ) : (
+            <div className="glass-card p-12 text-center text-slate-500 italic">
+              No jobs currently open. Be the first to post one!
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* How it Works */}
+      <section className="bg-emerald-500/5 py-24 border-y border-white/5">
+        <div className="max-w-7xl mx-auto px-6">
+          <h2 className="text-4xl text-center mb-16">The TrustWork Lifecycle</h2>
+          <div className="grid md:grid-cols-4 gap-12 relative">
+            <div className="hidden md:block absolute top-12 left-0 w-full h-px bg-white/10 -z-10" />
+            {[
+              { step: "01", title: "Post Job", desc: "Clients post job & lock budget in escrow." },
+              { step: "02", title: "Bid & Select", desc: "Freelancers bid & client accepts the best." },
+              { step: "03", title: "Ship Work", desc: "Freelancer submits work description." },
+              { step: "04", title: "Release", desc: "Client approves & payment releases instantly." }
+            ].map((s, i) => (
+              <div key={i} className="flex flex-col items-center text-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-[#0a0a0c] border-2 border-emerald-500 flex items-center justify-center text-emerald-500 font-bold font-mono">
+                  {s.step}
+                </div>
+                <h4 className="text-lg">{s.title}</h4>
+                <p className="text-sm text-slate-400">{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
     </div>
-  );
-}
-
-function StatCard({ label, value, icon }: { label: string; value: string | number; icon: React.ReactNode }) {
-  return (
-    <Card className="text-center">
-      <CardContent className="pt-6">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-primary/20 text-primary mb-4">
-          {icon}
-        </div>
-        <p className="text-2xl md:text-3xl font-bold text-white mb-1">{value}</p>
-        <p className="text-sm text-slate-400">{label}</p>
-      </CardContent>
-    </Card>
-  );
-}
-
-function FeatureCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
-  return (
-    <Card className="text-center hover:border-primary/50 transition-colors">
-      <CardContent className="pt-8 pb-8">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 text-primary mb-6">
-          {icon}
-        </div>
-        <h3 className="text-xl font-semibold text-white mb-3">{title}</h3>
-        <p className="text-slate-400">{description}</p>
-      </CardContent>
-    </Card>
-  );
-}
-
-function StepCard({ number, icon, title, description }: { number: number; icon: React.ReactNode; title: string; description: string }) {
-  return (
-    <div className="relative">
-      <div className="flex flex-col items-center text-center">
-        <div className="relative">
-          <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-white mb-4">
-            {icon}
-          </div>
-          <span className="absolute -top-2 -right-2 w-6 h-6 bg-accent rounded-full flex items-center justify-center text-xs font-bold text-background">
-            {number}
-          </span>
-        </div>
-        <h4 className="font-semibold text-white mb-2">{title}</h4>
-        <p className="text-sm text-slate-400">{description}</p>
-      </div>
-    </div>
-  );
-}
-
-function UseCaseCard({ icon, title, items }: { icon: React.ReactNode; title: string; items: string[] }) {
-  return (
-    <Card>
-      <CardContent className="pt-6">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-accent/20 text-accent mb-4">
-          {icon}
-        </div>
-        <h3 className="text-xl font-semibold text-white mb-4">{title}</h3>
-        <ul className="space-y-2">
-          {items.map((item) => (
-            <li key={item} className="flex items-center gap-2 text-slate-300">
-              <CheckCircle className="h-4 w-4 text-accent" />
-              {item}
-            </li>
-          ))}
-        </ul>
-      </CardContent>
-    </Card>
   );
 }

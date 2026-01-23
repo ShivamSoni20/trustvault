@@ -1,50 +1,75 @@
-export interface Escrow {
+export interface Job {
   id: number;
-  client: string;
-  freelancer: string;
-  amount: bigint;
-  deadline: number;
-  status: number;
-  metadata: string | null;
-  workCompleted: boolean;
-  disputeReason: string | null;
+  creator: string;              // Client's principal
+  title: string;                // Max 200 chars
+  description: string;          // Max 1000 chars
+  budget: bigint;               // In micro-USDCx (6 decimals)
+  deadline: number;             // Burn block height
+  status: number;               // 1-6 (see status codes)
+  selectedFreelancer: string | null;
+  workSubmittedBy: string | null;
+  workSubmittedAt: number | null;
+  workDescription: string | null;
+  creatorFeedback: string | null;
+  createdAt: number;            // Burn block height
+  category: string;             // e.g., "Design", "Development"
 }
 
-export interface EscrowDisplay {
-  id: number;
-  client: string;
+export interface Bid {
+  jobId: number;
   freelancer: string;
-  amount: number;
-  deadline: Date;
-  status: number;
+  bidAmount: bigint;            // In micro-USDCx
+  proposal: string;             // Max 500 chars
+  bidStatus: number;            // 1-4 (pending/accepted/rejected/withdrawn)
+  submittedAt: number;          // Burn block height
+}
+
+export interface Dispute {
+  jobId: number;
+  raisedBy: string;             // Who raised the dispute
+  reason: string;               // Max 500 chars
+  raisedAt: number;
+  resolved: boolean;
+  resolution: string | null;    // Admin's decision
+}
+
+export interface JobDisplay extends Omit<Job, 'budget'> {
+  budget: number;               // Decimal format
   statusLabel: string;
-  metadata: string | null;
-  workCompleted: boolean;
-  disputeReason: string | null;
   isExpired: boolean;
-  daysRemaining: number;
+  blocksRemaining: number;
+}
+
+export interface BidDisplay extends Omit<Bid, 'bidAmount'> {
+  bidAmount: number;
+  statusLabel: string;
 }
 
 export interface ContractStats {
-  totalEscrows: number;
+  totalJobs: number;
   totalValueLocked: number;
-  activeEscrows: number;
-  disputedEscrows: number;
-  completedEscrows: number;
+  completedJobs: number;
+  activeJobs: number;
 }
 
-export interface CreateEscrowInput {
-  freelancer: string;
+export interface PostJobInput {
+  title: string;
+  description: string;
+  budget: number;
+  deadline: number; // Block height
+  category: string;
+}
+
+export interface SubmitBidInput {
+  jobId: number;
   amount: number;
-  deadline: Date;
-  metadata?: string;
+  proposal: string;
 }
 
 export interface TransactionRecord {
   txId: string;
-  type: 'create' | 'complete' | 'release' | 'refund' | 'dispute' | 'resolve';
-  escrowId: number;
-  amount?: number;
+  type: 'post-job' | 'submit-bid' | 'accept-bid' | 'submit-work' | 'approve-work' | 'raise-dispute' | 'resolve-dispute';
+  jobId: number;
   timestamp: Date;
   status: 'pending' | 'confirmed' | 'failed';
 }
