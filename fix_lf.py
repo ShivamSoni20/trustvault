@@ -11,6 +11,7 @@ def to_lf(path):
 files = [
     'Clarinet.toml',
     'contracts/trustwork-marketplace.clar',
+    'contracts/trustwork-marketplace-fixed.clar',
     'contracts/usdcx-v1.clar',
     'contracts/usdcx-escrow.clar'
 ]

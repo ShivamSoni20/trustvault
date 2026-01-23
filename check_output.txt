@@ -1,0 +1,162 @@
+warning: use of potentially unchecked data
+--> contracts\trustwork-marketplace-fixed.clar:170:16
+        title: title,
+               ^~~~~
+note:: source of untrusted input here
+  (title (string-utf8 200))
+   ^~~~~
+warning: use of potentially unchecked data
+--> contracts\trustwork-marketplace-fixed.clar:171:22
+        description: description,
+                     ^~~~~~~~~~~
+note:: source of untrusted input here
+  (description (string-utf8 1000))
+   ^~~~~~~~~~~
+warning: use of potentially unchecked data
+--> contracts\trustwork-marketplace-fixed.clar:181:19
+        category: category
+                  ^~~~~~~~
+note:: source of untrusted input here
+  (category (string-utf8 100))
+   ^~~~~~~~
+warning: use of potentially unchecked data
+--> contracts\trustwork-marketplace-fixed.clar:218:17
+      { job-id: job-id, freelancer: tx-sender }
+                ^~~~~~
+note:: source of untrusted input here
+  (job-id uint)
+   ^~~~~~
+warning: use of potentially unchecked data
+--> contracts\trustwork-marketplace-fixed.clar:221:19
+        proposal: proposal,
+                  ^~~~~~~~
+note:: source of untrusted input here
+  (proposal (string-utf8 500))
+   ^~~~~~~~
+warning: use of potentially unchecked data
+--> contracts\trustwork-marketplace-fixed.clar:252:17
+      { job-id: job-id }
+                ^~~~~~
+note:: source of untrusted input here
+(define-public (accept-bid (job-id uint) (freelancer principal))
+                            ^~~~~~
+warning: use of potentially unchecked data
+--> contracts\trustwork-marketplace-fixed.clar:261:17
+      { job-id: job-id, freelancer: freelancer }
+                ^~~~~~
+note:: source of untrusted input here
+(define-public (accept-bid (job-id uint) (freelancer principal))
+                            ^~~~~~
+warning: use of potentially unchecked data
+--> contracts\trustwork-marketplace-fixed.clar:261:37
+      { job-id: job-id, freelancer: freelancer }
+                                    ^~~~~~~~~~
+note:: source of untrusted input here
+(define-public (accept-bid (job-id uint) (freelancer principal))
+                                          ^~~~~~~~~~
+warning: use of potentially unchecked data
+--> contracts\trustwork-marketplace-fixed.clar:289:17
+      { job-id: job-id }
+                ^~~~~~
+note:: source of untrusted input here
+  (job-id uint)
+   ^~~~~~
+warning: use of potentially unchecked data
+--> contracts\trustwork-marketplace-fixed.clar:334:17
+      { job-id: job-id }
+                ^~~~~~
+note:: source of untrusted input here
+  (job-id uint)
+   ^~~~~~
+warning: use of potentially unchecked data
+--> contracts\trustwork-marketplace-fixed.clar:379:17
+      { job-id: job-id }
+                ^~~~~~
+note:: source of untrusted input here
+(define-public (auto-release-payment (job-id uint))
+                                      ^~~~~~
+warning: use of potentially unchecked data
+--> contracts\trustwork-marketplace-fixed.clar:417:17
+      { job-id: job-id }
+                ^~~~~~
+note:: source of untrusted input here
+(define-public (cancel-job (job-id uint))
+                            ^~~~~~
+warning: use of potentially unchecked data
+--> contracts\trustwork-marketplace-fixed.clar:447:17
+      { job-id: job-id }
+                ^~~~~~
+note:: source of untrusted input here
+  (job-id uint)
+   ^~~~~~
+warning: use of potentially unchecked data
+--> contracts\trustwork-marketplace-fixed.clar:450:17
+        reason: reason,
+                ^~~~~~
+note:: source of untrusted input here
+  (reason (string-utf8 500))
+   ^~~~~~
+warning: use of potentially unchecked data
+--> contracts\trustwork-marketplace-fixed.clar:459:17
+      { job-id: job-id }
+                ^~~~~~
+note:: source of untrusted input here
+  (job-id uint)
+   ^~~~~~
+warning: use of potentially unchecked data
+--> contracts\trustwork-marketplace-fixed.clar:501:17
+      { job-id: job-id }
+                ^~~~~~
+note:: source of untrusted input here
+  (job-id uint)
+   ^~~~~~
+warning: use of potentially unchecked data
+--> contracts\trustwork-marketplace-fixed.clar:510:17
+      { job-id: job-id }
+                ^~~~~~
+note:: source of untrusted input here
+  (job-id uint)
+   ^~~~~~
+warning: use of potentially unchecked data
+--> contracts\trustwork-marketplace-fixed.clar:542:17
+      { job-id: job-id, freelancer: tx-sender }
+                ^~~~~~
+note:: source of untrusted input here
+(define-public (withdraw-bid (job-id uint))
+                              ^~~~~~
+warning: use of potentially unchecked data
+--> contracts\usdcx-v1.clar:10:30
+  (match (ft-transfer? usdcx amount sender recipient)
+                             ^~~~~~
+note:: source of untrusted input here
+(define-public (transfer (amount uint) (sender principal) (recipient principal) (memo (optional (buff 34))))
+                          ^~~~~~
+warning: use of potentially unchecked data
+--> contracts\usdcx-v1.clar:10:37
+  (match (ft-transfer? usdcx amount sender recipient)
+                                    ^~~~~~
+note:: source of untrusted input here
+(define-public (transfer (amount uint) (sender principal) (recipient principal) (memo (optional (buff 34))))
+                                        ^~~~~~
+warning: use of potentially unchecked data
+--> contracts\usdcx-v1.clar:10:44
+  (match (ft-transfer? usdcx amount sender recipient)
+                                           ^~~~~~~~~
+note:: source of untrusted input here
+(define-public (transfer (amount uint) (sender principal) (recipient principal) (memo (optional (buff 34))))
+                                                           ^~~~~~~~~
+! 21 warnings detected
+??? 2 contracts checked
+
+----------------------------
+Hint: what's next?
+Once you are ready to write TypeScript unit tests for your contract, run the following command:
+
+  $ npm install
+  $ npm test
+    Run all run tests in the ./tests folder.
+
+Find more information on testing with Clarinet here: https://docs.hiro.so/stacks/clarinet-js-sdk
+These hints can be disabled in the ~/.clarinet/clarinetrc.toml file.
+  $ mkdir -p ~/.clarinet; echo "enable_hints = false" >> ~/.clarinet/clarinetrc.toml
+----------------------------
