@@ -4,7 +4,7 @@
 
 ;; ============ CONSTANTS ============
 
-(define-constant USDCX_TOKEN .usdcx-v1)
+(define-constant USDCX_TOKEN 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.usdcx)
 (define-constant PLATFORM_FEE_BPS u200) ;; 2%
 (define-constant AUTO_RELEASE_BLOCKS u1000) ;; ~7 days on Stacks
 
