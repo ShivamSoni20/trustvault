@@ -2,60 +2,42 @@
 
 import { useCallback } from 'react';
 import { openContractCall } from '@stacks/connect';
-import { 
-  Cl, 
-  FungibleConditionCode, 
-  makeStandardFungiblePostCondition,
-  makeContractFungiblePostCondition,
-  createAssetInfo
+import {
+  Cl,
+  Pc,
+  PostConditionMode
 } from '@stacks/transactions';
-import { CONTRACT_ADDRESS, CONTRACT_NAME, STACKS_NETWORK } from '@/utils/constants';
+import { CONTRACT_ADDRESS, CONTRACT_NAME, STACKS_NETWORK, USDCX_CONTRACT_ID, USDCX_ASSET_NAME } from '@/utils/constants';
 import { useWallet } from './useWallet';
 import { parseUSDCxToMicro } from '@/utils/formatters';
-
-// USDCx details for post-conditions
-const USDCX_ASSET_ADDRESS = 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM';
-const USDCX_ASSET_NAME = 'usdcx-v1';
-const USDCX_ASSET_SYMBOL = 'usdcx';
 
 export function useMarketplaceActions() {
   const { address } = useWallet();
 
   const getUSDCxPostCondition = useCallback((amountMicro: bigint, isFromUser: boolean) => {
-    const assetInfo = createAssetInfo(USDCX_ASSET_ADDRESS, USDCX_ASSET_NAME, USDCX_ASSET_SYMBOL);
     if (isFromUser && address) {
-      return makeStandardFungiblePostCondition(
-        address,
-        FungibleConditionCode.Equal,
-        amountMicro,
-        assetInfo
-      );
+      return Pc.principal(address).willSendEq(amountMicro).ft(USDCX_CONTRACT_ID, USDCX_ASSET_NAME);
     } else {
-      return makeContractFungiblePostCondition(
-        CONTRACT_ADDRESS,
-        CONTRACT_NAME,
-        FungibleConditionCode.Equal,
-        amountMicro,
-        assetInfo
-      );
+      return Pc.principal(`${CONTRACT_ADDRESS}.${CONTRACT_NAME}`).willSendEq(amountMicro).ft(USDCX_CONTRACT_ID, USDCX_ASSET_NAME);
     }
   }, [address]);
 
   const postJob = useCallback(async (title: string, description: string, budget: number, deadline: number, category: string) => {
     const budgetMicro = parseUSDCxToMicro(budget);
-    
+
     await openContractCall({
       network: STACKS_NETWORK,
       contractAddress: CONTRACT_ADDRESS,
       contractName: CONTRACT_NAME,
       functionName: 'post-job',
       functionArgs: [
-        Cl.utf8(title),
-        Cl.utf8(description),
+        Cl.stringUtf8(title),
+        Cl.stringUtf8(description),
         Cl.uint(budgetMicro),
         Cl.uint(deadline),
-        Cl.utf8(category)
+        Cl.stringUtf8(category)
       ],
+      postConditionMode: PostConditionMode.Deny,
       postConditions: [getUSDCxPostCondition(budgetMicro, true)],
       onFinish: (data) => console.log('Transaction broadcasted:', data.txId),
       onCancel: () => console.log('Transaction cancelled'),
@@ -64,7 +46,7 @@ export function useMarketplaceActions() {
 
   const submitBid = useCallback(async (jobId: number, amount: number, proposal: string) => {
     const amountMicro = parseUSDCxToMicro(amount);
-    
+
     await openContractCall({
       network: STACKS_NETWORK,
       contractAddress: CONTRACT_ADDRESS,
@@ -73,8 +55,9 @@ export function useMarketplaceActions() {
       functionArgs: [
         Cl.uint(jobId),
         Cl.uint(amountMicro),
-        Cl.utf8(proposal)
+        Cl.stringUtf8(proposal)
       ],
+      postConditionMode: PostConditionMode.Deny,
       postConditions: [getUSDCxPostCondition(amountMicro, true)],
       onFinish: (data) => console.log('Bid transaction broadcasted:', data.txId),
     });
@@ -97,21 +80,19 @@ export function useMarketplaceActions() {
       contractAddress: CONTRACT_ADDRESS,
       contractName: CONTRACT_NAME,
       functionName: 'submit-work',
-      functionArgs: [Cl.uint(jobId), Cl.utf8(description)],
+      functionArgs: [Cl.uint(jobId), Cl.stringUtf8(description)],
+      postConditionMode: PostConditionMode.Deny,
       onFinish: (data) => console.log('Submit work transaction broadcasted:', data.txId),
     });
   }, []);
 
-  const approveWork = useCallback(async (jobId: number, amount: number) => {
-    const amountMicro = parseUSDCxToMicro(amount);
-    // When approving, funds move from contract to freelancer and owner
-    // We can add post-conditions for the contract outgoing funds if needed
+  const approveWork = useCallback(async (jobId: number, feedback: string) => {
     await openContractCall({
       network: STACKS_NETWORK,
       contractAddress: CONTRACT_ADDRESS,
       contractName: CONTRACT_NAME,
       functionName: 'approve-work',
-      functionArgs: [Cl.uint(jobId)],
+      functionArgs: [Cl.uint(jobId), Cl.stringUtf8(feedback)],
       onFinish: (data) => console.log('Approve work transaction broadcasted:', data.txId),
     });
   }, []);
