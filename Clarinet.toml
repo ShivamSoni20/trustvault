@@ -5,13 +5,13 @@ authors = ["TrustWork Team"]
 telemetry = true
 cache_dir = "./.cache"
 
-[contracts.trustwork-marketplace-v2]
+[contracts.trustwork-marketplace-v3]
 path = "contracts/trustwork-marketplace-fixed.clar"
 epoch = "latest"
-depends_on = ["usdcx-v1"]
+depends_on = ["usdcx"]
 
-[contracts.usdcx-v1]
-path = "contracts/usdcx-v1.clar"
+[contracts.usdcx]
+path = "contracts/usdcx.clar"
 epoch = "latest"
 depends_on = []
 
