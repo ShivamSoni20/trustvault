@@ -12,7 +12,7 @@ files = [
     'Clarinet.toml',
     'contracts/trustwork-marketplace.clar',
     'contracts/trustwork-marketplace-fixed.clar',
-    'contracts/usdcx-v1.clar',
+    'contracts/usdcx.clar',
     'contracts/usdcx-escrow.clar'
 ]
 
