@@ -165,3 +165,18 @@ export async function getUserTransactions(address: string): Promise<TransactionR
     return [];
   }
 }
+
+export async function getUserBalance(address: string): Promise<number> {
+  try {
+    const response = await api.get(`/extended/v1/address/${address}/balances`);
+    if (response.data && response.data.stx) {
+      const stxBalance = BigInt(response.data.stx.balance);
+      return Number(stxBalance) / 1_000_000;
+    }
+    return 0;
+  } catch (error) {
+    console.error('Failed to fetch user balance:', error);
+    return 0;
+  }
+}
+
