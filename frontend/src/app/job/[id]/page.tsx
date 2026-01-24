@@ -7,9 +7,9 @@ import { useWallet } from '@/hooks/useWallet';
 import { useMarketplaceActions } from '@/hooks/useMarketplaceActions';
 import { formatUSDCx, truncateAddress, formatDate } from '@/utils/formatters';
 import { JOB_STATUS, BID_STATUSES, STATUS_COLORS } from '@/utils/constants';
-import { 
-  FiChevronLeft, FiClock, FiDollarSign, FiUser, FiTag, 
-  FiSend, FiCheckCircle, FiAlertCircle, FiFileText, FiArrowRight 
+import {
+  FiChevronLeft, FiClock, FiDollarSign, FiUser, FiTag,
+  FiSend, FiCheckCircle, FiAlertCircle, FiFileText, FiArrowRight, FiPlusSquare
 } from 'react-icons/fi';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -18,7 +18,7 @@ export default function JobDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const jobId = parseInt(id as string);
-  const { address, isConnected } = useWallet();
+  const { address, isConnected, connectWallet } = useWallet();
   const { data: job, isLoading, refetch } = useJob(jobId);
   const { data: userBid } = useBid(jobId, address);
   const { data: currentBlockHeight = 0 } = useBlockHeight();
@@ -28,6 +28,7 @@ export default function JobDetailPage() {
   const [bidAmount, setBidAmount] = useState('');
   const [proposal, setProposal] = useState('');
   const [workDesc, setWorkDesc] = useState('');
+  const [feedback, setFeedback] = useState('Great work! Approved.');
 
   if (isLoading) return (
     <div className="max-w-7xl mx-auto px-6 py-24 flex justify-center">
@@ -158,7 +159,7 @@ export default function JobDetailPage() {
           {/* Action Card */}
           <div className="glass-card p-8 flex flex-col gap-6 border-emerald-500/20 shadow-[0_20px_40px_-20px_rgba(16,185,129,0.2)]">
             <h3 className="text-xl font-bold border-b border-white/5 pb-4">Job Actions</h3>
-            
+
             {!isConnected ? (
               <button onClick={connectWallet} className="btn-primary w-full py-4">Connect Wallet</button>
             ) : isCreator ? (
@@ -166,8 +167,8 @@ export default function JobDetailPage() {
                 {job.status === JOB_STATUS.OPEN && (
                   <>
                     <p className="text-sm text-slate-400 italic">Waiting for bids from freelancers. You can cancel this job anytime before accepting a bid.</p>
-                    <button 
-                      onClick={() => handleAction(() => cancelJob(jobId))} 
+                    <button
+                      onClick={() => handleAction(() => cancelJob(jobId))}
                       disabled={isSubmitting}
                       className="btn-secondary text-rose-500 border-rose-500/20 hover:bg-rose-500/10"
                     >
@@ -175,12 +176,21 @@ export default function JobDetailPage() {
                     </button>
                   </>
                 )}
-                
+
                 {job.status === JOB_STATUS.WORK_SUBMITTED && (
                   <>
                     <p className="text-sm text-slate-400">Freelancer has submitted the work. Please review it carefully before approving.</p>
-                    <button 
-                      onClick={() => handleAction(() => approveWork(jobId, job.budget))} 
+                    <div className="flex flex-col gap-2">
+                      <label className="text-[10px] uppercase font-mono text-slate-500">Review Feedback</label>
+                      <input
+                        type="text"
+                        className="bg-white/5 border border-white/10 rounded-xl p-3 focus:outline-none focus:border-emerald-500/50 transition-colors text-sm"
+                        value={feedback}
+                        onChange={e => setFeedback(e.target.value)}
+                      />
+                    </div>
+                    <button
+                      onClick={() => handleAction(() => approveWork(jobId, feedback))}
                       disabled={isSubmitting}
                       className="btn-primary w-full py-4 text-glow-emerald"
                     >
@@ -214,7 +224,7 @@ export default function JobDetailPage() {
                       <form onSubmit={(e) => { e.preventDefault(); handleAction(() => submitBid(jobId, parseFloat(bidAmount), proposal)); }} className="flex flex-col gap-4">
                         <div className="flex flex-col gap-2">
                           <label className="text-[10px] uppercase font-mono text-slate-500">Your Quote (USDCx)</label>
-                          <input 
+                          <input
                             type="number" step="0.01" required placeholder="0.00"
                             className="bg-white/5 border border-white/10 rounded-xl p-3 focus:outline-none focus:border-emerald-500/50 transition-colors font-mono"
                             value={bidAmount} onChange={e => setBidAmount(e.target.value)}
@@ -222,7 +232,7 @@ export default function JobDetailPage() {
                         </div>
                         <div className="flex flex-col gap-2">
                           <label className="text-[10px] uppercase font-mono text-slate-500">Proposal</label>
-                          <textarea 
+                          <textarea
                             required rows={4} placeholder="Why are you the best for this job?"
                             className="bg-white/5 border border-white/10 rounded-xl p-3 focus:outline-none focus:border-emerald-500/50 transition-colors text-sm resize-none"
                             value={proposal} onChange={e => setProposal(e.target.value)}
@@ -240,13 +250,13 @@ export default function JobDetailPage() {
                       <p className="text-sm text-blue-400 font-bold mb-1">Status: Active Assignment</p>
                       <p className="text-xs text-slate-400 leading-relaxed">You have been selected! Complete the work and submit the description/links here.</p>
                     </div>
-                    <textarea 
+                    <textarea
                       required rows={4} placeholder="Submission description, links to work, or IPFS hashes..."
                       className="bg-white/5 border border-white/10 rounded-xl p-3 focus:outline-none focus:border-emerald-500/50 transition-colors text-sm resize-none"
                       value={workDesc} onChange={e => setWorkDesc(e.target.value)}
                     />
-                    <button 
-                      onClick={() => handleAction(() => submitWork(jobId, workDesc))} 
+                    <button
+                      onClick={() => handleAction(() => submitWork(jobId, workDesc))}
                       disabled={isSubmitting}
                       className="btn-primary w-full py-4"
                     >
