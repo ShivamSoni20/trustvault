@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { hexToCV, Cl, cvToValue } from '@stacks/transactions';
-import { API_BASE_URL, CONTRACT_ADDRESS, CONTRACT_NAME } from '@/utils/constants';
+import { API_BASE_URL, CONTRACT_ADDRESS, CONTRACT_NAME, USDCX_CONTRACT_ID, USDCX_ASSET_NAME } from '@/utils/constants';
 import type { Job, JobDisplay, Bid, ContractStats, TransactionRecord } from '@/types';
 import { getStatusLabel, blockHeightToDate } from '@/utils/formatters';
 
@@ -176,6 +176,23 @@ export async function getUserBalance(address: string): Promise<number> {
     return 0;
   } catch (error) {
     console.error('Failed to fetch user balance:', error);
+    return 0;
+  }
+}
+
+export async function getUSDCxBalance(address: string): Promise<number> {
+  try {
+    const response = await api.get(`/extended/v1/address/${address}/balances`);
+    if (response.data && response.data.fungible_tokens) {
+      const fullIdentifier = `${USDCX_CONTRACT_ID}::${USDCX_ASSET_NAME}`;
+      const tokenData = response.data.fungible_tokens[fullIdentifier];
+      if (tokenData) {
+        return Number(BigInt(tokenData.balance)) / 1_000_000;
+      }
+    }
+    return 0;
+  } catch (error) {
+    console.error('Failed to fetch USDCx balance:', error);
     return 0;
   }
 }
