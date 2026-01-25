@@ -8,7 +8,7 @@ import { truncateAddress, copyToClipboard, getExplorerUrl } from '@/utils/format
 import { useUIStore } from '@/store/uiStore';
 
 export function WalletButton() {
-  const { address, isConnected, balance, connectWallet, disconnectWallet } = useWallet();
+  const { address, isConnected, balance, usdcxBalance, connectWallet, disconnectWallet } = useWallet();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { addToast } = useUIStore();
@@ -89,8 +89,13 @@ export function WalletButton() {
             </div>
 
             <div className="p-4 border-b border-slate-700">
-              <p className="text-xs text-slate-400 mb-1">Balance</p>
+              <p className="text-xs text-slate-400 mb-1">STX Balance</p>
               <p className="text-lg font-semibold">{balance.toFixed(6)} STX</p>
+            </div>
+
+            <div className="p-4 border-b border-slate-700">
+              <p className="text-xs text-slate-400 mb-1">USDCx Balance</p>
+              <p className="text-lg font-semibold text-emerald-500">{usdcxBalance.toFixed(2)} USDCx</p>
             </div>
 
             <div className="p-2">

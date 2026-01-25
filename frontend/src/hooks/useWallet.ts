@@ -3,10 +3,20 @@
 import { useEffect, useCallback, useState } from 'react';
 import { connect, isConnected, disconnect, getLocalStorage } from '@stacks/connect';
 import { useWalletStore } from '@/store/walletStore';
-import { getUserBalance } from '@/services/apiService';
+import { getUserBalance, getUSDCxBalance } from '@/services/apiService';
 
 export function useWallet() {
-  const { address, isConnected: storeConnected, balance, setAddress, setConnected, setBalance, disconnect: storeDisconnect } = useWalletStore();
+  const {
+    address,
+    isConnected: storeConnected,
+    balance,
+    usdcxBalance,
+    setAddress,
+    setConnected,
+    setBalance,
+    setUsdcxBalance,
+    disconnect: storeDisconnect
+  } = useWalletStore();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -28,8 +38,12 @@ export function useWallet() {
           console.log('Setting address from localStorage:', addr);
           setAddress(addr);
           setConnected(true);
-          const bal = await getUserBalance(addr);
-          setBalance(bal);
+          const [stxBal, usdcxBal] = await Promise.all([
+            getUserBalance(addr),
+            getUSDCxBalance(addr)
+          ]);
+          setBalance(stxBal);
+          setUsdcxBalance(usdcxBal);
         }
       } else {
         // Clear store if not connected in wallet
@@ -65,8 +79,12 @@ export function useWallet() {
         console.log('Setting address from connect:', addr);
         setAddress(addr);
         setConnected(true);
-        const bal = await getUserBalance(addr);
-        setBalance(bal);
+        const [stxBal, usdcxBal] = await Promise.all([
+          getUserBalance(addr),
+          getUSDCxBalance(addr)
+        ]);
+        setBalance(stxBal);
+        setUsdcxBalance(usdcxBal);
       }
     } catch (error) {
       console.error('Wallet connection failed:', error);
@@ -80,15 +98,20 @@ export function useWallet() {
 
   const refreshBalance = useCallback(async () => {
     if (address) {
-      const bal = await getUserBalance(address);
-      setBalance(bal);
+      const [stxBal, usdcxBal] = await Promise.all([
+        getUserBalance(address),
+        getUSDCxBalance(address)
+      ]);
+      setBalance(stxBal);
+      setUsdcxBalance(usdcxBal);
     }
-  }, [address, setBalance]);
+  }, [address, setBalance, setUsdcxBalance]);
 
   return {
     address,
     isConnected: storeConnected,
     balance,
+    usdcxBalance,
     connectWallet,
     disconnectWallet,
     refreshBalance,
