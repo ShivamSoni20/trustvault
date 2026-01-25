@@ -9,7 +9,7 @@ plan:
     - id: 0
       transactions:
         - contract-publish:
-            contract-name: trustwork-marketplace-v7
+            contract-name: trustwork-marketplace-v10
             expected-sender: ST30TRK58DT4P8CJQ8Y9D539X1VET78C63BNF0C9A
             cost: 1799037
             path: "contracts/trustwork-marketplace.clar"
