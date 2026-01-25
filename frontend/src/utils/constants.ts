@@ -2,8 +2,14 @@ import { STACKS_TESTNET, STACKS_MAINNET } from '@stacks/network';
 
 export const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || 'ST30TRK58DT4P8CJQ8Y9D539X1VET78C63BNF0C9A';
 export const CONTRACT_NAME = process.env.NEXT_PUBLIC_CONTRACT_NAME || 'trustwork-marketplace-v2';
-export const USDCX_CONTRACT_ID = 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.usdcx';
-export const USDCX_ASSET_NAME = 'usdcx';
+
+// Token Configuration
+const usdcxTokenFull = process.env.NEXT_PUBLIC_USDCX_TOKEN || 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.usdcx';
+export const USDCX_CONTRACT_ID = usdcxTokenFull.split('::')[0];
+export const USDCX_ASSET_NAME = usdcxTokenFull.includes('::')
+  ? usdcxTokenFull.split('::')[1]
+  : (usdcxTokenFull.split('.')[1] || 'usdcx');
+
 export const NETWORK = process.env.NEXT_PUBLIC_STACKS_NETWORK || 'testnet';
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.testnet.hiro.so';
 
