@@ -137,7 +137,7 @@
 ;; ============ PRIVATE FUNCTIONS ============
 
 (define-private (transfer-usdcx (amount uint) (from principal) (to principal))
-  (contract-call? USDCX_TOKEN transfer amount from to)
+  (contract-call? USDCX_TOKEN transfer amount from to none)
 )
 
 (define-private (calc-fee (amount uint))
